@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const connectDB = require('./utils/db');
 const config = require('./config/config');
@@ -6,7 +7,7 @@ const config = require('./config/config');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin'); 
-const courseRoutes = require('./routes/course');
+const courseRoutes = require('./routes/courseRoutes');
 
 const app = express();
 
@@ -14,7 +15,7 @@ const app = express();
 connectDB();
 
 // Initialize middleware
-app.use(express.json({ extended: false })); // Allows us to parse JSON request bodies
+app.use(express.json({ extended: false })); 
 
 // Define Routes
 app.use('/api/auth', authRoutes);

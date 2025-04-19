@@ -34,7 +34,6 @@ exports.updateUserProfile = async (req, res) => {
 
     if (name) user.name = name;
     if (bio) user.profile.bio = bio;
-    // Update other profile fields as needed
 
     await user.save();
     res.json(user);

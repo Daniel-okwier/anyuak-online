@@ -12,4 +12,14 @@ router.post('/register', authController.registerUser);
 // @access  Public
 router.post('/login', authController.loginUser);
 
+// @route   POST /api/auth/forgot-password
+// @desc    Initiate password reset
+// @access  Public
+router.post('/forgot-password', authController.forgotPassword);
+
+// @route   POST /api/auth/reset-password
+// @desc    Reset password with token
+// @access  Public
+router.post('/reset-password', authController.resetPassword);
+
 module.exports = router;

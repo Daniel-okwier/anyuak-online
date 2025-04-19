@@ -3,22 +3,22 @@ const mongoose = require('mongoose');
 const ProgressSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the User model
+    ref: 'User', 
     required: true,
   },
   course: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course', // Reference to the Course model
+    ref: 'Course',
     required: true,
   },
   module: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Module', // Reference to the Module model
+    ref: 'Module', 
     required: true,
   },
   content: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Content', // Reference to the Content model
+    ref: 'Content', 
     required: true,
   },
   isCompleted: {
@@ -31,6 +31,6 @@ const ProgressSchema = new mongoose.Schema({
   },
 });
 
-ProgressSchema.index({ user: 1, course: 1, module: 1, content: 1 }, { unique: true }); // Ensure a user's progress on a specific content item is unique
+ProgressSchema.index({ user: 1, course: 1, module: 1, content: 1 }, { unique: true }); 
 
 module.exports = mongoose.model('Progress', ProgressSchema);

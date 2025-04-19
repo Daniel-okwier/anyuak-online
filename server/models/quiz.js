@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const QuizSchema = new mongoose.Schema({
   module: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Module', // Reference to the Module model
+    ref: 'Module', 
     required: true,
   },
   title: {
@@ -21,7 +21,6 @@ const QuizSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
-      // You might want to add more fields like question type, points, etc.
     },
   ],
   createdAt: {

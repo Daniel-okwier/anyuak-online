@@ -13,6 +13,7 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    select: false, // Don't return by default
   },
   role: {
     type: String,
@@ -29,7 +30,14 @@ const UserSchema = new mongoose.Schema({
   },
   profile: {
     bio: String,
-    // ... other profile fields
+  },
+  resetPasswordToken: {
+    type: String,
+    select: false,
+  },
+  resetPasswordExpires: {
+    type: Date,
+    select: false,
   },
 });
 

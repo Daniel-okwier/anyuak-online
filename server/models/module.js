@@ -1,23 +1,29 @@
 const mongoose = require('mongoose');
 
 const ModuleSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  course: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course', // Reference to the Course model
-    required: true,
-  },
-  order: {
-    type: Number,
-    default: 0, // To control the order of modules within a course
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+    course: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
+        required: true,
+        index: true,
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    order: {
+        type: Number,
+        default: 0,
+    },
+    content: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Content',
+    }],
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
 });
 
 module.exports = mongoose.model('Module', ModuleSchema);
