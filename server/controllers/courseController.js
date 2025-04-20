@@ -1,6 +1,7 @@
 const Course = require('../models/course');
 const Module = require('../models/module');
 const User = require('../models/user');
+const contentController = require('../controllers/contentController');
 
 // @desc    Create a new course with a thumbnail (protected, admin or approved teacher)
 // @route   POST /api/courses

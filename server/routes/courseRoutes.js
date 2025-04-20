@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 const courseController = require('../controllers/courseController');
+const contentController = require('../controllers/contentController'); 
 const upload = require('../middleware/upload');
 const moduleRoutes = express.Router({ mergeParams: true });
 const contentRoutes = express.Router({ mergeParams: true });
@@ -25,14 +26,14 @@ moduleRoutes.delete('/:moduleId', auth, authorize(['admin', 'teacher']), courseC
 contentRoutes.post('/', auth, authorize(['admin', 'teacher']), upload.fields([
     { name: 'image', maxCount: 1 },
     { name: 'video', maxCount: 1 },
-]), contentController.addContent);
-contentRoutes.get('/', contentController.getContentByModule);
-contentRoutes.get('/:contentId', contentController.getContentById);
+]), contentController.addContent); // Use contentController
+contentRoutes.get('/', contentController.getContentByModule); // Use contentController
+contentRoutes.get('/:contentId', contentController.getContentById); // Use contentController
 contentRoutes.put('/:contentId', auth, authorize(['admin', 'teacher']), upload.fields([
     { name: 'image', maxCount: 1 },
     { name: 'video', maxCount: 1 },
-]), contentController.updateContent);
-contentRoutes.delete('/:contentId', auth, authorize(['admin', 'teacher']), contentController.deleteContent);
+]), contentController.updateContent); // Use contentController
+contentRoutes.delete('/:contentId', auth, authorize(['admin', 'teacher']), contentController.deleteContent); // Use contentController
 
 // Use the module routes under the /courses/:courseId path
 router.use('/:courseId/modules', moduleRoutes);
