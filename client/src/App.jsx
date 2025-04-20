@@ -1,36 +1,31 @@
-import {
-  createBrowserRouter, 
-  createRoutesFromElements,
-  Route, 
-  RouterProvider,
-  Outlet
-} from 'react-router-dom';
-import './styles/global.css';
-
-// Pages
-import Home from './pages/Home'; 
-import Dashboard from './pages/Dashboard'; 
-import Auth from './pages/auth/Auth'; 
-import NotFound from './pages/NotFound'; 
-
-// Layouts
-import Header from './component/layout/Header'; 
-//import Footer from './component/layout/Footer'; 
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<><Header /><main><Outlet /></main></>}>
-      <Route index element={<Home />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/auth/*" element={<Auth />} />
-      <Route path="*" element={<NotFound />} />
-    </Route>
-  )
-);
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Achievements from './pages/Achievements';
+import Leaderboard from './pages/Leaderboard';
+import Settings from './pages/Settings';
+import AiTools from './pages/Dipoy';
+import Logout from './pages/Logout';
+import CourseDetails from './pages/CourseDetails'; // Import the CourseDetails component
 
 function App() {
   return (
-    <RouterProvider router={router} />
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/ai-tools" element={<AiTools />} />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/course/:courseId" element={<CourseDetails />} /> {/* Add this route */}
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 
