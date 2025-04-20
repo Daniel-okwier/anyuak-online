@@ -2,7 +2,8 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { motion } from 'framer-motion';
-import { FaCheckCircle } from 'react-icons/fi';
+import { FiCheckCircle } from 'react-icons/fi'; // Import the correct checkmark icon
+
 const CourseDetailsContainer = styled(motion.div)`
   flex-grow: 1;
   padding: 40px;
@@ -107,7 +108,7 @@ const LessonItem = styled.li`
   }
 `;
 
-const CompletedIcon = styled(FaCheckCircle)`
+const CompletedIcon = styled(FiCheckCircle)`
   color: #4caf50;
   margin-left: 10px;
 `;
@@ -203,7 +204,7 @@ function CourseDetails() {
             {course.currentLessonIndex === -1 ? 'Start Course' : 'Continue Course'}
           </StartContinueButton>
         )}
-        {/* "View All Lessons" can be integrated into the lessons list itself */}
+        {/* "View All Lessons" functionality is integrated into the lessons list */}
       </NavigationButtons>
 
       {course.lessons && course.lessons.length > 0 && (
