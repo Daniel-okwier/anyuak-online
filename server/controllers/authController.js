@@ -3,14 +3,12 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const User = require('../models/user');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer'); // Make sure you have this installed: npm install nodemailer
+const nodemailer = require('nodemailer'); 
 
-// Hardcoded admin credentials (replace with a strong, secure value)
+
 const ADMIN_CREDENTIAL = process.env.ADMIN_CREDENTIAL || 'your-super-secret-admin-key';
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
+
 exports.registerUser = async (req, res) => {
   const { name, email, password, role, adminCredential } = req.body;
 
@@ -66,15 +64,13 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// @desc    Authenticate user and get token
-// @route   POST /api/auth/login
-// @access  Public
+
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
     // Check if the user exists
-    let user = await User.findOne({ email }).select('+password'); // Select password for comparison
+    let user = await User.findOne({ email }).select('+password'); 
     if (!user) {
       return res.status(400).json({ errors: [{ msg: 'Invalid credentials' }] });
     }
@@ -103,9 +99,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// @desc    Initiate password reset
-// @route   POST /api/auth/forgot-password
-// @access  Public
+
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -118,17 +112,16 @@ exports.forgotPassword = async (req, res) => {
 
     const resetToken = crypto.randomBytes(20).toString('hex');
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    user.resetPasswordExpires = Date.now() + 3600000; 
 
     await user.save();
 
     const resetUrl = `http://localhost:${config.port}/reset-password?token=${resetToken}&email=${user.email}`; // Adjust URL as needed
 
-    // Configure your email transporter (replace with your email service details)
     const transporter = nodemailer.createTransport({
       host: config.email.host,
       port: config.email.port,
-      secure: config.email.secure, // true for 465, false for other ports
+      secure: config.email.secure, 
       auth: {
         user: config.email.auth.user,
         pass: config.email.auth.pass,
@@ -159,9 +152,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// @desc    Reset password with token
-// @route   POST /api/auth/reset-password
-// @access  Public
+
 exports.resetPassword = async (req, res) => {
   const { token, email, newPassword } = req.body;
 
@@ -170,7 +161,7 @@ exports.resetPassword = async (req, res) => {
       email,
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() },
-    }).select('+password'); // Select password for hashing
+    }).select('+password'); 
 
     if (!user) {
       return res.status(400).json({ msg: 'Invalid or expired reset token.' });

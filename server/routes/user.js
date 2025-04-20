@@ -1,17 +1,16 @@
-// routes/user.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const userController = require('../controllers/userController');
+const pointController = require('../controllers/pointController'); 
 
-// @route   GET /api/users/me
-// @desc    Get current user profile (protected)
-// @access  Private
-router.get('/me', auth, userController.getCurrentUser);
 
-// @route   PUT /api/users/:userId
-// @desc    Update user profile (protected)
-// @access  Private
-router.put('/:userId', auth, userController.updateUserProfile);
+router.get('/me', auth, userController.getCurrentUser); 
+
+
+router.put('/me', auth, userController.updateUserProfile); 
+
+
+router.get('/me/points', auth, pointController.getUserPoints);
 
 module.exports = router;

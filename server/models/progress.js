@@ -5,13 +5,13 @@ const ProgressSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
-        index: true, // For efficient querying of a user's progress
+        index: true, 
     },
     content: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Content',
         required: true,
-        index: true, // For efficient querying of progress on specific content
+        index: true, 
     },
     isCompleted: {
         type: Boolean,
@@ -30,7 +30,7 @@ const ProgressSchema = new mongoose.Schema({
     },
 });
 
-// Ensure that a user can't have multiple progress records for the same content
+
 ProgressSchema.index({ user: 1, content: 1 }, { unique: true });
 
 module.exports = mongoose.model('Progress', ProgressSchema);

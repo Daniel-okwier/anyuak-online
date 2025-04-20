@@ -27,7 +27,7 @@ module.exports = async function (req, res, next) {
     }
 
     req.user = user;
-    req.user.role = decoded.user.role; // Ensure role is also accessible
+    req.user.role = decoded.user.role; 
     next();
   } catch (err) {
     res.status(401).json({ msg: 'Token is not valid' });
