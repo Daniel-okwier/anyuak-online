@@ -10,8 +10,9 @@ const leaderboardRoutes = require('./leaderboardRoutes');
 const recommendationRoutes = require('./recommendationRoutes');
 const aiRoutes = require('./aiRoutes');
 const progressRoutes = require('./progressRoutes');
-const contentRoutes = require('./contentRoutes'); // Although mounted within courseRoutes, you might want to export it if used elsewhere
-const quizRoutes = require('./quizRoutes');     // Same reasoning as contentRoutes
+const contentRoutes = require('./contentRoutes'); 
+const quizRoutes = require('./quizRoutes');   
+const teacherRequests = require('./teacherRequests') 
 
 router.use('/api/courses', courseRoutes);
 router.use('/api/users', userRoutes);
@@ -23,5 +24,6 @@ router.use('/api/leaderboard', leaderboardRoutes);
 router.use('/api/recommendations', recommendationRoutes);
 router.use('/api/ai', aiRoutes);
 router.use('/api/progress', progressRoutes);
+router.use('/api/teacher-requests', teacherRequests);
 
 module.exports = router;

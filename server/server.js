@@ -3,7 +3,8 @@ const express = require('express');
 const connectDB = require('./utils/db');
 const config = require('./config/config');
 const winston = require('winston');
-const routes = require('./routes'); // Correct import for index.js
+const routes = require('./routes');
+const cors = require('cors'); 
 
 const logger = winston.createLogger({
     level: 'info',
@@ -21,6 +22,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const app = express();
+
+
+app.use(cors());
+
 app.use((req, res, next) => {
     logger.info(`Request: ${req.method} ${req.url}`);
     next();

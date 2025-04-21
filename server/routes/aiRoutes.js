@@ -1,21 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const aiController = require('../controllers/aiController');
-const auth = require('../middleware/auth');
-const authorize = require('../middleware/authorize');
 
 /**
- * @route   POST /api/ai/generate-quiz
- * @desc    Generate a quiz using OpenAI based on topic, number of questions, and difficulty.
- * @access  Authenticated (Admin or Teacher)
+ * @route    POST /api/ai/generate-quiz
+ * @desc      Generate a quiz using OpenAI based on topic, number of questions, and difficulty.
+ * @access    Public (removed auth and authorize middleware)
  */
-router.post('/generate-quiz', auth, authorize(['admin', 'teacher']), aiController.generateQuiz);
+router.post('/generate-quiz', aiController.generateQuiz);
 
 /**
- * @route   POST /api/ai/summarize-text
- * @desc    Summarize the provided text using OpenAI.
- * @access  Authenticated
+ * @route    POST /api/ai/summarize-text
+ * @desc      Summarize the provided text using OpenAI.
+ * @access    Public (removed auth middleware)
  */
-router.post('/summarize-text', auth, aiController.summarizeText);
+router.post('/summarize-text', aiController.summarizeText);
 
 module.exports = router;
