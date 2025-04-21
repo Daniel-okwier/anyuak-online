@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled } from 'styled-components';
+import { Link, useNavigate } from 'react-router-dom';
 
 const HeaderContainer = styled.header`
   background-color: #333;
@@ -94,6 +95,26 @@ const LogoutButton = styled.button`
     color: #eee;
   }
 `;
+
+const SignupLink = styled(Link)`
+  color: #ddd;
+  text-decoration: none;
+
+  &:hover {
+    color: #eee;
+  }
+`;
+
+const LoginLink = styled(Link)`
+  color: #ddd;
+  text-decoration: none;
+  margin-left: 10px;
+
+  &:hover {
+    color: #eee;
+  }
+`;
+
 const HamburgerButtonHeader = styled.button`
   background: none;
   border: none;
@@ -110,8 +131,30 @@ const HamburgerButtonHeader = styled.button`
 
 function Header({ onToggleSidebar }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const platformName = "Cosmic Learn";
-  const username = "Stellar Explorer";
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const platformName = 'Cosmic Learn';
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      setIsLoggedIn(true);
+      try {
+        const parsedUser = JSON.parse(user);
+        setUsername(parsedUser?.name || 'User');
+      } catch (error) {
+        console.error("Error parsing user from localStorage", error);
+        setIsLoggedIn(false);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    } else {
+      setIsLoggedIn(false);
+      setUsername('');
+    }
+  }, []);
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -119,6 +162,14 @@ function Header({ onToggleSidebar }) {
 
   const handleSearchSubmit = () => {
     console.log('Searching for:', searchQuery);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setUsername('');
+    navigate('/'); // Redirect to home or login page
   };
 
   return (
@@ -134,17 +185,30 @@ function Header({ onToggleSidebar }) {
         />
         <SearchButton onClick={handleSearchSubmit}>Search</SearchButton>
       </SearchBar>
-      <UserInfo>
-        <Avatar />
-        <WelcomeText>Welcome,</WelcomeText>
-        <Username>{username}!</Username>
-      </UserInfo>
+      {isLoggedIn ? (
+        <UserInfo>
+          <Avatar />
+          <WelcomeText>Welcome,</WelcomeText>
+          <Username>{username}!</Username>
+        </UserInfo>
+      ) : null}
       <Actions>
-        <NotificationIcon> {/* Placeholder for notification icon */} 🔔 </NotificationIcon>
-        <LogoutButton>Logout</LogoutButton>
+        <NotificationIcon>
+          {' '}
+          {/* Placeholder for notification icon */} 🔔{' '}
+        </NotificationIcon>
+        {isLoggedIn ? (
+          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+        ) : (
+          <>
+            <SignupLink to="/signup">Sign Up</SignupLink>
+            <LoginLink to="/login">Login</LoginLink>
+          </>
+        )}
       </Actions>
     </HeaderContainer>
   );
 }
 
 export default Header;
+
