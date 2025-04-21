@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { motion } from 'framer-motion';
-import { FiCheckCircle } from 'react-icons/fi'; // Import the correct checkmark icon
+import { FiCheckCircle } from 'react-icons/fi';
 
 const CourseDetailsContainer = styled(motion.div)`
   flex-grow: 1;
@@ -113,6 +113,93 @@ const CompletedIcon = styled(FiCheckCircle)`
   margin-left: 10px;
 `;
 
+const QuizContainer = styled.div`
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #222;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+`;
+
+const Question = styled.h3`
+  font-size: 1.2rem;
+  color: #ddd;
+  margin-bottom: 15px;
+`;
+
+const OptionsList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+`;
+
+const OptionItem = styled.li`
+  background-color: #333;
+  color: #eee;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #444;
+  }
+`;
+
+const SubmitButton = styled.button`
+  background-color: ${(props) => props.theme.primary};
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+
+  &:hover {
+    background-color: ${(props) => props.theme.primaryDarker};
+  }
+`;
+
+const CloseButton = styled.button`
+  background-color: #d32f2f;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+  margin-top: 15px;
+
+  &:hover {
+    background-color: #b71c1c;
+  }
+`;
+
+const ResultsContainer = styled.div`
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #222;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  color: #eee;
+`;
+
+const ResultsTitle = styled.h3`
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #ddd;
+`;
+
+const ScoreText = styled.p`
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+`;
+
 const theme = {
   primary: '#64b5f6',
   primaryDarker: '#42a5f5',
@@ -120,27 +207,47 @@ const theme = {
 
 function CourseDetails() {
   const { courseId } = useParams();
+  const [isQuizActive, setIsQuizActive] = useState(false);
+  const [quizData, setQuizData] = useState(null);
+  const [userAnswers, setUserAnswers] = useState([]);
+  const [quizResult, setQuizResult] = useState(null);
+  const [mockUserPoints, setMockUserPoints] = useState(1000); // Mock user points
 
   const findCourse = (id) => {
     const courses = [
-      { id: '1', title: 'Cosmic Navigation', progress: 0.3, summary: 'Learn the fundamentals of navigating through the cosmos.',
-        lessons: [{ title: 'Intro', resource: '' }, { title: 'Lesson 2', resource: '' }], currentLessonIndex: -1, completedLessons: [] },
-      { id: '2', title: 'Stellar Physics', progress: 0.7, summary: 'Explore the fascinating physics governing stars and their life cycles.',
-        lessons: [{ title: 'Lesson 1', resource: '' }, { title: 'Fusion', resource: '' }, { title: 'Class', resource: '' }], currentLessonIndex: 1, completedLessons: [0] },
-      { id: '3', title: 'Nebula Exploration', progress: 0.1, summary: 'Discover the beauty and science behind nebulae.',
-        lessons: [{ title: 'Types', resource: '' }, { title: 'Emission', resource: '' }], currentLessonIndex: -1, completedLessons: [] },
-      { id: '4', title: 'Galaxy Formation', progress: 0.5, summary: 'Understand how galaxies are born and evolve over cosmic time.',
-        lessons: [{ title: 'Early', resource: '' }, { title: 'Spiral', resource: '' }], currentLessonIndex: 0, completedLessons: [] },
-      { id: '5', title: 'Dark Matter Studies', progress: 0.9, summary: 'Delve into the mysterious world of dark matter.',
-        lessons: [{ title: 'Evidence', resource: '' }, { title: 'Theories', resource: '' }], currentLessonIndex: -1, completedLessons: [0, 1] },
-      { id: '6', title: 'Exoplanetary Systems', progress: 0.2, summary: 'Explore the diversity of planets orbiting stars beyond our Sun.',
-        lessons: [{ title: 'Detection', resource: '' }, { title: 'Types', resource: '' }], currentLessonIndex: -1, completedLessons: [] },
-      { id: '7', title: 'Introduction to Astrobiology', progress: 0.6, summary: 'An introduction to the study of life in the universe.',
-        lessons: [{ title: 'What is Life', resource: '' }, { title: 'Building Blocks', resource: '' }], currentLessonIndex: -1, completedLessons: [] },
-      { id: '8', title: 'Principles of Space Travel', progress: 0.4, summary: 'Learn the basic principles and technologies behind space travel.',
-        lessons: [{ title: 'Propulsion', resource: '' }, { title: 'Orbit', resource: '' }], currentLessonIndex: -1, completedLessons: [] },
-      { id: '9', title: 'The Enigmatic Black Holes', progress: 0.8, summary: 'Unravel the secrets of black holes and their profound effects on spacetime.',
-        lessons: [{ title: 'Formation', resource: '' }, { title: 'Anatomy', resource: '' }], currentLessonIndex: -1, completedLessons: [] },
+      {
+        id: '1',
+        title: 'Cosmic Navigation',
+        progress: 0.3,
+        summary: 'Learn the fundamentals of navigating through the cosmos.',
+        lessons: [{ title: 'Intro', resource: '' }, { title: 'Lesson 2', resource: '' }],
+        currentLessonIndex: -1,
+        completedLessons: [],
+        quiz: {
+          title: 'Cosmic Navigation Quiz',
+          questions: [
+            {
+              question: 'What is the speed of light in a vacuum?',
+              options: ['300,000 km/s', '150,000 km/s', '450,000 km/s', '200,000 km/s'],
+              correctAnswerIndex: 0,
+              points: 10,
+            },
+            {
+              question: 'Which galaxy is our solar system part of?',
+              options: ['Andromeda', 'Triangulum', 'Milky Way', 'Whirlpool'],
+              correctAnswerIndex: 2,
+              points: 15,
+            },
+            {
+              question: 'What is a light-year a measure of?',
+              options: ['Time', 'Distance', 'Speed', 'Brightness'],
+              correctAnswerIndex: 1,
+              points: 10,
+            },
+          ],
+        },
+      },
+      // Add other courses here...
     ];
     return courses.find((course) => course.id === courseId);
   };
@@ -183,6 +290,86 @@ function CourseDetails() {
     return course.completedLessons && course.completedLessons.includes(index);
   };
 
+  const handleStartQuiz = () => {
+    if (course.quiz) {
+      setIsQuizActive(true);
+      setQuizData(course.quiz);
+      setUserAnswers(Array(course.quiz.questions.length).fill(null));
+      setQuizResult(null); // Reset previous results
+    }
+  };
+
+  const handleAnswerSelect = (questionIndex, answerIndex) => {
+    const newAnswers = [...userAnswers];
+    newAnswers[questionIndex] = answerIndex;
+    setUserAnswers(newAnswers);
+  };
+
+  const handleSubmitQuiz = () => {
+    if (!quizData) return;
+
+    let score = 0;
+    quizData.questions.forEach((question, index) => {
+      if (userAnswers[index] === question.correctAnswerIndex) {
+        score += question.points;
+      }
+    });
+
+    setQuizResult({ score: score, totalPoints: quizData.questions.reduce((sum, q) => sum + q.points, 0) });
+    setIsQuizActive(false);
+
+    // Simulate local point update
+    setMockUserPoints((prevPoints) => prevPoints + score);
+    console.log('Quiz submitted. Score:', score, 'Updated points:', mockUserPoints + score);
+  };
+
+  const handleCloseQuiz = () => {
+    setIsQuizActive(false);
+    setQuizResult(null);
+  };
+
+  if (isQuizActive && quizData) {
+    return (
+      <CourseDetailsContainer>
+        <QuizContainer>
+          <h2>{quizData.title}</h2>
+          {quizData.questions.map((question, index) => (
+            <div key={index}>
+              <Question>{question.question}</Question>
+              <OptionsList>
+                {question.options.map((option, optionIndex) => (
+                  <OptionItem
+                    key={optionIndex}
+                    onClick={() => handleAnswerSelect(index, optionIndex)}
+                    style={{
+                      backgroundColor: userAnswers[index] === optionIndex ? '#555' : '#333',
+                    }}
+                  >
+                    {option}
+                  </OptionItem>
+                ))}
+              </OptionsList>
+            </div>
+          ))}
+          <SubmitButton theme={theme} onClick={handleSubmitQuiz}>Submit Quiz</SubmitButton>
+          <CloseButton onClick={handleCloseQuiz}>Close Quiz</CloseButton>
+        </QuizContainer>
+      </CourseDetailsContainer>
+    );
+  }
+
+  if (quizResult) {
+    return (
+      <CourseDetailsContainer>
+        <ResultsContainer>
+          <ResultsTitle>Quiz Results</ResultsTitle>
+          <ScoreText>Your Score: {quizResult.score} / {quizResult.totalPoints}</ScoreText>
+          <CloseButton onClick={() => setQuizResult(null)}>Close Results</CloseButton>
+        </ResultsContainer>
+      </CourseDetailsContainer>
+    );
+  }
+
   return (
     <CourseDetailsContainer
       initial={{ opacity: 0 }}
@@ -204,7 +391,9 @@ function CourseDetails() {
             {course.currentLessonIndex === -1 ? 'Start Course' : 'Continue Course'}
           </StartContinueButton>
         )}
-        {/* "View All Lessons" functionality is integrated into the lessons list */}
+        {course.quiz && (
+          <button onClick={handleStartQuiz}>Take Quiz</button>
+        )}
       </NavigationButtons>
 
       {course.lessons && course.lessons.length > 0 && (
@@ -214,9 +403,8 @@ function CourseDetails() {
             {course.lessons.map((lesson, index) => (
               <LessonItem
                 key={index}
-                theme={theme}
-                onClick={() => handleLessonClick(lesson.resource)}
                 isCompleted={isLessonCompleted(index)}
+                onClick={() => handleLessonClick(lesson.resource)}
               >
                 {lesson.title}
                 {isLessonCompleted(index) && <CompletedIcon />}

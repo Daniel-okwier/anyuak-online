@@ -153,6 +153,20 @@ const generateStars = (count) => {
 };
 
 function Dashboard() {
+  // In Dashboard.jsx
+const users = [
+  { id: 101, name: 'Cosmic Explorer', points: 1550 },
+  { id: 102, name: 'Stellar Navigator', points: 2100 },
+  { id: 103, name: 'Nebula Adventurer', points: 1200 },
+  { id: 104, name: 'Galactic Pioneer', points: 1800 },
+  { id: 105, name: 'Dark Matter Detective', points: 2500 },
+  { id: 106, name: 'Exoplanet Enthusiast', points: 950 },
+  { id: 107, name: 'Astrobiologist', points: 1700 },
+  { id: 108, name: 'Spacefarer', points: 2300 },
+  { id: 109, name: 'Black Hole Observer', points: 1400 },
+];
+
+
   const courses = [
     { id: 1, title: 'Cosmic Navigation', progress: 0.3, color1: '#64b5f6', color2: '#2196f3', summary: 'Learn the fundamentals of navigating through the cosmos.',
       lessons: [{ title: 'Intro', resource: '' }, { title: 'Lesson 2', resource: '' }], currentLessonIndex: -1, completedLessons: [] },
