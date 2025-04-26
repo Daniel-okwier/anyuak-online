@@ -8,13 +8,6 @@ const emailConfig = {
   },
 };
 
-console.log('Email Configuration:', emailConfig);
-console.log('JWT Secret:', process.env.JWT_SECRET);
-console.log('OpenAI API Key from Config:', process.env.OPENAI_API_KEY); 
-console.log('Database URI:', process.env.MONGO_URI);
-console.log('Server Port:', process.env.PORT);
-
-
 module.exports = {
   database: process.env.MONGO_URI || 'mongodb+srv://HUSSLEX:mydb@cluster0.fg5db.mongodb.net/anyuakonline?retryWrites=true&w=majority&appName=Cluster0',
   jwtSecret: process.env.JWT_SECRET || 'H8g!kL2@pT9#zVq3$wXy7^jF6*eB1&nR4',

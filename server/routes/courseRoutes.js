@@ -1,33 +1,31 @@
 const express = require('express');
+const {
+  createCourse,
+  getCourses,
+  getCourseById,
+  updateCourse,
+  deleteCourse,
+  enrollCourse,
+  submitQuiz
+} = require('../controllers/courseController');
+const { protect, teacher } = require('../middleware/authMiddleware');
+
 const router = express.Router();
-const auth = require('../middleware/auth');
-const authorize = require('../middleware/authorize');
-const courseController = require('../controllers/courseController');
-const upload = require('../middleware/upload');
-const moduleRoutes = express.Router({ mergeParams: true });
-const contentRoutes = require('./contentRoutes'); // Import content routes
-const quizRoutes = require('./quizRoutes'); // Import quiz routes
 
-// Course routes
-router.post('/', auth, authorize(['admin', 'teacher']), courseController.createCourse);
-router.get('/', courseController.getAllCourses);
-router.get('/:courseId', courseController.getCourseById);
-router.put('/:courseId', auth, authorize(['admin', 'teacher']), courseController.updateCourse);
-router.delete('/:courseId', auth, authorize(['admin']), courseController.deleteCourse);
+router.route('/')
+  .post(protect, teacher, createCourse)
+  .get(getCourses);
 
-// Module routes (nested under courses)
-moduleRoutes.post('/', auth, authorize(['admin', 'teacher']), courseController.createModule);
-moduleRoutes.get('/', courseController.getModulesByCourse);
-moduleRoutes.get('/:moduleId', courseController.getModuleById);
-moduleRoutes.put('/:moduleId', auth, authorize(['admin', 'teacher']), courseController.updateModule);
-moduleRoutes.delete('/:moduleId', auth, authorize(['admin', 'teacher']), courseController.deleteModule);
+router.route('/:id')
+  .get(getCourseById)
+  .put(protect, teacher, updateCourse)
+  .delete(protect, teacher, deleteCourse);
 
-// Mount content routes under /:courseId/modules/:moduleId/content
-moduleRoutes.use('/:moduleId/content', contentRoutes);
+router.route('/:id/enroll')
+  .post(protect, enrollCourse);
 
-// Mount quiz routes under /:courseId/modules/:moduleId/quizzes
-moduleRoutes.use('/:moduleId/quizzes', quizRoutes);
-
-router.use('/:courseId/modules', moduleRoutes);
+// New route for quiz submission
+router.route('/:courseId/lessons/:lessonId/quiz')
+  .post(protect, submitQuiz);
 
 module.exports = router;

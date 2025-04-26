@@ -1,246 +1,262 @@
 const Course = require('../models/course');
-const Module = require('../models/module');
 const User = require('../models/user');
 
-exports.createCourse = async (req, res) => {
-    try {
-        const { title, description, category } = req.body;
-        const instructor = req.user.id;
+// @desc    Create a new course
+// @route   POST /api/courses
+// @access  Private/Teacher/Admin
+const createCourse = async (req, res) => {
+  try {
+    const { 
+      title, 
+      description, 
+      category,
+      level,
+      price,
+      thumbnail,
+      lessons
+    } = req.body;
 
-        const newCourse = new Course({
-            title,
-            description,
-            instructor,
-            category,
-        });
-
-        const course = await newCourse.save();
-        res.status(201).json(course);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+    // Calculate total duration if lessons are provided
+    let totalDuration = 0;
+    if (lessons && lessons.length > 0) {
+      totalDuration = lessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0);
     }
+
+    const course = await Course.create({
+      title,
+      description,
+      instructor: req.user._id,
+      category,
+      level,
+      price,
+      thumbnail,
+      lessons: lessons || [],
+      totalDuration
+    });
+
+    res.status(201).json(course);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.getAllCourses = async (req, res) => {
-    try {
-        const { title, instructorName } = req.query;
-        const query = {};
-
-        if (title) {
-            query.title = { $regex: title, $options: 'i' };
+// @desc    Get all courses
+// @route   GET /api/courses
+// @access  Public
+const getCourses = async (req, res) => {
+  try {
+    const pageSize = 10;
+    const page = Number(req.query.page) || 1;
+    
+    const keyword = req.query.keyword
+      ? {
+          title: {
+            $regex: req.query.keyword,
+            $options: 'i',
+          },
         }
-
-        if (instructorName) {
-            const users = await User.find({ name: { $regex: instructorName, $options: 'i' } }).select('_id');
-            const instructorIds = users.map(user => user._id);
-            query.instructor = { $in: instructorIds };
-        }
-
-        const courses = await Course.find(query).populate('instructor', 'name');
-        res.json(courses);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
+      : {};
+    
+    const category = req.query.category ? { category: req.query.category } : {};
+    const level = req.query.level ? { level: req.query.level } : {};
+    
+    const count = await Course.countDocuments({ ...keyword, ...category, ...level });
+    const courses = await Course.find({ ...keyword, ...category, ...level })
+      .populate('instructor', 'name avatar')
+      .limit(pageSize)
+      .skip(pageSize * (page - 1))
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      courses,
+      page,
+      pages: Math.ceil(count / pageSize),
+      total: count
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.getCourseById = async (req, res) => {
-    try {
-        const course = await Course.findById(req.params.courseId).populate('instructor', 'name').populate({
-            path: 'modules',
-            select: 'title order _id',
-            populate: {
-                path: 'content',
-                select: 'type title order videoUrl youtubeUrl documentUrl quiz'
-            }
-        });
-        if (!course) {
-            return res.status(404).json({ msg: 'Course not found' });
-        }
-        res.json(course);
-    } catch (err) {
-        console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Course not found' });
-        }
-        res.status(500).send('Server error');
+// @desc    Get course by ID
+// @route   GET /api/courses/:id
+// @access  Public
+const getCourseById = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id)
+      .populate('instructor', 'name avatar')
+      .populate('enrolledStudents', 'name avatar');
+    
+    if (course) {
+      res.json(course);
+    } else {
+      res.status(404).json({ message: 'Course not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.updateCourse = async (req, res) => {
-    const { title, description, category } = req.body;
-
-    try {
-        const course = await Course.findById(req.params.courseId);
-
-        if (!course) {
-            return res.status(404).json({ msg: 'Course not found' });
-        }
-
-        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(401).json({ msg: 'Not authorized to update this course' });
-        }
-
-        course.title = title || course.title;
-        course.description = description || course.description;
-        course.category = category || course.category;
-
-        await course.save();
-        res.json(course);
-    } catch (err) {
-        console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Course not found' });
-        }
-        res.status(500).send('Server error');
+// @desc    Update course details
+// @route   PUT /api/courses/:id
+// @access  Private/Teacher/Admin
+const updateCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
     }
+    
+    // Check if the user is the instructor or an admin
+    if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to update this course' });
+    }
+    
+    // Update course fields
+    const { title, description, category, level, price, thumbnail, lessons } = req.body;
+    
+    course.title = title || course.title;
+    course.description = description || course.description;
+    course.category = category || course.category;
+    course.level = level || course.level;
+    course.price = price !== undefined ? price : course.price;
+    course.thumbnail = thumbnail || course.thumbnail;
+    
+    // Update lessons if provided
+    if (lessons) {
+      course.lessons = lessons;
+      // Recalculate total duration
+      course.totalDuration = lessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0);
+    }
+    
+    course.updatedAt = Date.now();
+    
+    const updatedCourse = await course.save();
+    res.json(updatedCourse);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.deleteCourse = async (req, res) => {
-    try {
-        const course = await Course.findById(req.params.courseId);
-
-        if (!course) {
-            return res.status(404).json({ msg: 'Course not found' });
-        }
-
-        // Remove associated modules
-        await Module.deleteMany({ course: req.params.courseId });
-
-        await course.remove();
-        res.json({ msg: 'Course and associated modules deleted successfully' });
-    } catch (err) {
-        console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Course not found' });
-        }
-        res.status(500).send('Server error');
+// @desc    Delete a course
+// @route   DELETE /api/courses/:id
+// @access  Private/Teacher/Admin
+const deleteCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
     }
+    
+    // Check if the user is the instructor or an admin
+    if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete this course' });
+    }
+    
+    await course.deleteOne();
+    res.json({ message: 'Course removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.createModule = async (req, res) => {
-    const { title, order } = req.body;
-    const { courseId } = req.params;
-
-    try {
-        const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({ msg: 'Course not found' });
-        }
-
-        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(401).json({ msg: 'Not authorized to add modules to this course' });
-        }
-
-        const newModule = new Module({
-            course: courseId,
-            title,
-            order: order || 0,
-        });
-
-        const module = await newModule.save();
-
-        course.modules.push(module.id);
-        await course.save();
-
-        res.status(201).json(module);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+// @desc    Enroll in a course
+// @route   POST /api/courses/:id/enroll
+// @access  Private/Student
+const enrollCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    const user = await User.findById(req.user._id);
+    
+    if (!course || !user) {
+      return res.status(404).json({ message: 'Course or user not found' });
     }
+    
+    // Check if user is already enrolled
+    if (course.enrolledStudents.includes(req.user._id)) {
+      return res.status(400).json({ message: 'Already enrolled in this course' });
+    }
+    
+    // Add user to course's enrolled students
+    course.enrolledStudents.push(req.user._id);
+    await course.save();
+    
+    // Add course to user's enrolled courses
+    user.enrolledCourses.push(course._id);
+    await user.save();
+    
+    res.status(200).json({ message: 'Successfully enrolled in course' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.getModulesByCourse = async (req, res) => {
-    const { courseId } = req.params;
+// @desc    Submit quiz answers for a lesson
+// @route   POST /api/courses/:courseId/lessons/:lessonId/quiz
+// @access  Private
+const submitQuiz = async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+    const { answers } = req.body;
 
-    try {
-        const modules = await Module.find({ course: courseId }).sort({ order: 1 });
-        res.json(modules);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+    if (!answers || !Array.isArray(answers)) {
+      return res.status(400).json({ message: 'Invalid quiz submission format' });
     }
+
+    const course = await Course.findById(courseId);
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const lesson = course.lessons.id(lessonId);
+    
+    if (!lesson) {
+      return res.status(404).json({ message: 'Lesson not found' });
+    }
+
+    if (!lesson.quiz || !lesson.quiz.questions || lesson.quiz.questions.length === 0) {
+      return res.status(400).json({ message: 'No quiz available for this lesson' });
+    }
+
+    // Check answers and calculate score
+    const quizQuestions = lesson.quiz.questions;
+    let correctAnswers = 0;
+
+    // Make sure we only check as many answers as there are questions
+    const answersToCheck = Math.min(answers.length, quizQuestions.length);
+    
+    for (let i = 0; i < answersToCheck; i++) {
+      if (answers[i] === quizQuestions[i].correctAnswer) {
+        correctAnswers++;
+      }
+    }
+
+    const score = (correctAnswers / quizQuestions.length) * 100;
+
+    // You might want to save the score to the user's record in the future
+    // For now, just return the result
+    
+    res.status(200).json({ 
+      score, 
+      correctAnswers, 
+      totalQuestions: quizQuestions.length,
+      passed: score >= 70 // Assuming 70% is passing
+    });
+    
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.getModuleById = async (req, res) => {
-    const { moduleId } = req.params;
-
-    try {
-        const module = await Module.findById(moduleId);
-        if (!module) {
-            return res.status(404).json({ msg: 'Module not found' });
-        }
-        res.json(module);
-    } catch (err) {
-        console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Module not found' });
-        }
-        res.status(500).send('Server error');
-    }
-};
-
-exports.updateModule = async (req, res) => {
-    const { title, order } = req.body;
-    const { courseId, moduleId } = req.params;
-
-    try {
-        const course = await Course.findById(courseId);
-        const module = await Module.findById(moduleId);
-
-        if (!course || !module) {
-            return res.status(404).json({ msg: 'Course or Module not found' });
-        }
-
-        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(401).json({ msg: 'Not authorized to update modules in this course' });
-        }
-
-        if (module.course.toString() !== courseId) {
-            return res.status(400).json({ msg: 'Module does not belong to this course' });
-        }
-
-        const updatedModule = await Module.findByIdAndUpdate(
-            moduleId,
-            { title, order },
-            { new: true }
-        );
-
-        res.json(updatedModule);
-    } catch (err) {
-        console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Module not found' });
-        }
-        res.status(500).send('Server error');
-    }
-};
-
-exports.deleteModule = async (req, res) => {
-    try {
-        const course = await Course.findById(req.params.courseId);
-        const module = await Module.findById(req.params.moduleId);
-        if (!course || !module) {
-            return res.status(404).json({ msg: 'Course or Module not found' });
-        }
-        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(401).json({ msg: 'Not authorized to delete modules from this course' });
-        }
-        if (module.course.toString() !== courseId) {
-            return res.status(400).json({ msg: 'Module does not belong to this course' });
-        }
-        await Module.findByIdAndDelete(req.params.moduleId);
-        course.modules = course.modules.filter(moduleId => moduleId.toString() !== req.params.moduleId);
-        await course.save();
-        // Optionally delete associated content as well
-        await Content.deleteMany({ module: req.params.moduleId });
-        res.json({ msg: 'Module and associated content deleted successfully' });
-    } catch (err) {
-        console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Module not found' });
-        }
-        res.status(500).send('Server error');
-    }
+module.exports = {
+  createCourse,
+  getCourses,
+  getCourseById,
+  updateCourse,
+  deleteCourse,
+  enrollCourse,
+  submitQuiz
 };
